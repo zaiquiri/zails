@@ -1,13 +1,19 @@
 require "rulers/version"
-require "rulers/array"
+require "rulers/routing"
 
 module Rulers
 
   class Application
     def call(env)
+      return [404, {'Content-Type' => 'text/html'}, []] if env['PATH_INFO'] == '/favicon.ico'
       klass, act = get_controller_and_action(env)
       controller = klass.new(env)
-      text = controller.send(act)
+      begin
+        text = controller.send(act)
+      rescue
+        return [500, {'Content-Type' => 'text/html'},
+         "There was an error"]
+      end
       [200, {'Content-Type' => 'text/html'},
         [text]]
     end
