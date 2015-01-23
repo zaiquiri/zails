@@ -3,6 +3,7 @@ require "rulers/routing"
 require "rulers/util"
 require "rulers/dependencies"
 require "rulers/controller"
+require "rulers/file_model"
 
 module Rulers
 
@@ -13,12 +14,19 @@ module Rulers
       controller = controller_class.new(env)
       begin
         text = controller.send(action_name)
-      rescue
-        return [500, {'Content-Type' => 'text/html'},
-                ["There was an error"]]
+        if controller.get_response
+          st, hd, rs = controller.get_response.to_a
+          [st, hd, [rs.body].flatten]
+        else
+          [200, {'Content-Type' => 'text/html'},
+           [text]]
+        end
+      rescue Exception => e
+        p e
+        p e.backtrace
+        [500, {'Content-Type' => 'text/html'},
+         ["There was an error"]]
       end
-      [200, {'Content-Type' => 'text/html'},
-       [text]]
     end
   end
 
